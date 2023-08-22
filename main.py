@@ -3,9 +3,10 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import datetime
 import pandas as pd
+from environs import Env
 
 
-def check_age_name(age):
+def get_age_name(age):
     num = age % 100
     if 4 < num < 21:
         return 'лет'
@@ -18,25 +19,31 @@ def check_age_name(age):
 
 
 def prepare_wine_categories():
-    wines = pd.read_excel('wine3.xlsx', na_values=None, keep_default_na=False).to_dict(orient='records')
+    env = Env()
+    env.read_env()
+    wines = pd.read_excel(
+        env.str('EXCEL_WINE_BASE'),
+        na_values=None,
+        keep_default_na=False).to_dict(orient='records')
     categories = collections.defaultdict(list)
     for category in wines:
         categories[category['Категория']].append(category)
     return categories
 
 
-def generate_wine_page():
+def main():
     env = Environment(
         loader=FileSystemLoader('.'),
         autoescape=select_autoescape(['html', 'xml'])
     )
+    company_foundation_date = 1920
     template = env.get_template('template.html')
-    company_age = datetime.datetime.now().year - 1920
+    company_age = datetime.datetime.now().year - company_foundation_date
 
     categories = prepare_wine_categories()
     rendered_page = template.render(
         age=company_age,
-        age_name=check_age_name(company_age),
+        age_name=get_age_name(company_age),
         categories=categories
     )
 
@@ -45,10 +52,6 @@ def generate_wine_page():
 
     server = HTTPServer(('127.0.0.1', 8000), SimpleHTTPRequestHandler)
     server.serve_forever()
-
-
-def main():
-    generate_wine_page()
 
 
 if __name__ == '__main__':

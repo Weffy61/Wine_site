@@ -1,7 +1,6 @@
-env/
-.vscode/
 venv/
 .idea
-.env
 __pycache__
 .DS_Store
+.env
+index.html

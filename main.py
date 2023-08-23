@@ -18,11 +18,9 @@ def get_age_name(age):
     return 'лет'
 
 
-def prepare_wine_categories():
-    env = Env()
-    env.read_env()
+def prepare_wine_categories(excel_base):
     wines = pd.read_excel(
-        env.str('EXCEL_WINE_BASE'),
+        excel_base,
         na_values=None,
         keep_default_na=False).to_dict(orient='records')
     categories = collections.defaultdict(list)
@@ -32,15 +30,18 @@ def prepare_wine_categories():
 
 
 def main():
-    env = Environment(
+    env_environs = Env()
+    env_environs.read_env()
+    excel_base = env_environs.str('EXCEL_WINE_BASE')
+    env_jinja = Environment(
         loader=FileSystemLoader('.'),
         autoescape=select_autoescape(['html', 'xml'])
     )
-    company_foundation_date = 1920
-    template = env.get_template('template.html')
-    company_age = datetime.datetime.now().year - company_foundation_date
+    company_foundation_year = 1920
+    template = env_jinja.get_template('template.html')
+    company_age = datetime.datetime.now().year - company_foundation_year
 
-    categories = prepare_wine_categories()
+    categories = prepare_wine_categories(excel_base)
     rendered_page = template.render(
         age=company_age,
         age_name=get_age_name(company_age),
